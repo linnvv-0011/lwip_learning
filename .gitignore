@@ -1,0 +1,9 @@
+win/Debug/
+*.sdf
+*.suo
+*.obj
+*.sbr
+*.tlog
+*.idb
+*.pdb
+*.exe
