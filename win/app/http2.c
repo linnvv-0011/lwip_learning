@@ -18,7 +18,7 @@ static void process_connection(struct netconn *conn)
     char *rq;
     u16_t len;
     
-    netconn_recv(conn, &inbuf);
+    inbuf = netconn_recv(conn);
     netbuf_data(inbuf, &rq, &len);
     /* HTTP "GET /\r\n" */
     if(rq[0] == 'G' && rq[1] == 'E' && rq[2] == 'T') {
@@ -39,7 +39,7 @@ void http_task()
     netconn_listen(conn);
     
     while(1) {
-        netconn_accept(conn, &newconn);
+        newconn = netconn_accept(conn);
         process_connection(newconn);
         if (newconn == NULL)
           continue;

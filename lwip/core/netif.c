@@ -42,8 +42,6 @@
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"
 #include "lwip/tcp.h"
-#include "lwip/snmp.h"
-#include "lwip/igmp.h"
 #include "netif/etharp.h"
 #if ENABLE_LOOPBACK
 #include "lwip/sys.h"
@@ -109,9 +107,6 @@ netif_add(struct netif *netif, struct ip_addr *ipaddr, struct ip_addr *netmask,
 #if LWIP_NETIF_LINK_CALLBACK
   netif->link_callback = NULL;
 #endif /* LWIP_NETIF_LINK_CALLBACK */
-#if LWIP_IGMP
-  netif->igmp_mac_filter = NULL;
-#endif /* LWIP_IGMP */
 #if ENABLE_LOOPBACK
   netif->loop_first = NULL;
   netif->loop_last = NULL;
@@ -138,14 +133,6 @@ netif_add(struct netif *netif, struct ip_addr *ipaddr, struct ip_addr *netmask,
   /* add this netif to the list */
   netif->next = netif_list;
   netif_list = netif;
-  snmp_inc_iflist();
-
-#if LWIP_IGMP
-  /* start IGMP processing */
-  if (netif->flags & NETIF_FLAG_IGMP) {
-    igmp_start( netif);
-  }
-#endif /* LWIP_IGMP */
 
   LWIP_DEBUGF(NETIF_DEBUG, ("netif: added interface %c%c IP addr ",
     netif->name[0], netif->name[1]));
@@ -185,19 +172,10 @@ void netif_remove(struct netif * netif)
 {
   if ( netif == NULL ) return;
 
-#if LWIP_IGMP
-  /* stop IGMP processing */
-  if (netif->flags & NETIF_FLAG_IGMP) {
-    igmp_stop( netif);
-  }
-#endif /* LWIP_IGMP */
-
-  snmp_delete_ipaddridx_tree(netif);
 
   /*  is it the first netif? */
   if (netif_list == netif) {
     netif_list = netif->next;
-    snmp_dec_iflist();
   }
   else {
     /*  look for netif further down the list */
@@ -205,7 +183,6 @@ void netif_remove(struct netif * netif)
     for (tmpNetif = netif_list; tmpNetif != NULL; tmpNetif = tmpNetif->next) {
       if (tmpNetif->next == netif) {
         tmpNetif->next = netif->next;
-        snmp_dec_iflist();
         break;
       }
     }
@@ -296,12 +273,8 @@ netif_set_ipaddr(struct netif *netif, struct ip_addr *ipaddr)
     }
   }
 #endif
-  snmp_delete_ipaddridx_tree(netif);
-  snmp_delete_iprteidx_tree(0,netif);
   /* set new IP address to netif */
   ip_addr_set(&(netif->ip_addr), ipaddr);
-  snmp_insert_ipaddridx_tree(netif);
-  snmp_insert_iprteidx_tree(0,netif);
 
   LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE | 3, ("netif: IP address of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",
     netif->name[0], netif->name[1],
@@ -343,10 +316,8 @@ netif_set_gw(struct netif *netif, struct ip_addr *gw)
 void
 netif_set_netmask(struct netif *netif, struct ip_addr *netmask)
 {
-  snmp_delete_iprteidx_tree(0, netif);
   /* set new netmask to netif */
   ip_addr_set(&(netif->netmask), netmask);
-  snmp_insert_iprteidx_tree(0, netif);
   LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE | 3, ("netif: netmask of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",
     netif->name[0], netif->name[1],
     ip4_addr1(&netif->netmask),
@@ -364,16 +335,6 @@ netif_set_netmask(struct netif *netif, struct ip_addr *netmask)
 void
 netif_set_default(struct netif *netif)
 {
-  if (netif == NULL)
-  {
-    /* remove default route */
-    snmp_delete_iprteidx_tree(1, netif);
-  }
-  else
-  {
-    /* install default route */
-    snmp_insert_iprteidx_tree(1, netif);
-  }
   netif_default = netif;
   LWIP_DEBUGF(NETIF_DEBUG, ("netif: setting default interface %c%c\n",
            netif ? netif->name[0] : '\'', netif ? netif->name[1] : '\''));
@@ -393,10 +354,6 @@ void netif_set_up(struct netif *netif)
   if ( !(netif->flags & NETIF_FLAG_UP )) {
     netif->flags |= NETIF_FLAG_UP;
     
-#if LWIP_SNMP
-    snmp_get_sysuptime(&netif->ts);
-#endif /* LWIP_SNMP */
-
     NETIF_LINK_CALLBACK(netif);
     NETIF_STATUS_CALLBACK(netif);
 
@@ -423,9 +380,6 @@ void netif_set_down(struct netif *netif)
   if ( netif->flags & NETIF_FLAG_UP )
     {
       netif->flags &= ~NETIF_FLAG_UP;
-#if LWIP_SNMP
-      snmp_get_sysuptime(&netif->ts);
-#endif
       
       NETIF_LINK_CALLBACK(netif);
       NETIF_STATUS_CALLBACK(netif);
@@ -465,13 +419,6 @@ void netif_set_link_up(struct netif *netif )
     etharp_gratuitous(netif);
   }
 #endif /* LWIP_ARP */
-
-#if LWIP_IGMP
-  /* resend IGMP memberships */
-  if (netif->flags & NETIF_FLAG_IGMP) {
-    igmp_report_groups( netif);
-  }
-#endif /* LWIP_IGMP */
 
   NETIF_LINK_CALLBACK(netif);
 }

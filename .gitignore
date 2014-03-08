@@ -1,4 +1,5 @@
 win/Debug/
+win/si/
 *.sdf
 *.suo
 *.obj
@@ -7,3 +8,4 @@ win/Debug/
 *.idb
 *.pdb
 *.exe
+

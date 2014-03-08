@@ -49,8 +49,6 @@
 
 #include "lwip/memp.h"
 #include "lwip/tcpip.h"
-#include "lwip/igmp.h"
-#include "lwip/dns.h"
 
 #include <string.h>
 
@@ -1152,81 +1150,5 @@ do_close(struct api_msg_msg *msg)
     TCPIP_APIMSG_ACK(msg);
   }
 }
-
-#if LWIP_IGMP
-/**
- * Join multicast groups for UDP netconns.
- * Called from netconn_join_leave_group
- *
- * @param msg the api_msg_msg pointing to the connection
- */
-void
-do_join_leave_group(struct api_msg_msg *msg)
-{ 
-  if (!ERR_IS_FATAL(msg->conn->err)) {
-    if (msg->conn->pcb.tcp != NULL) {
-      if (NETCONNTYPE_GROUP(msg->conn->type) == NETCONN_UDP) {
-#if LWIP_UDP
-        if (msg->msg.jl.join_or_leave == NETCONN_JOIN) {
-          msg->conn->err = igmp_joingroup(msg->msg.jl.interface, msg->msg.jl.multiaddr);
-        } else {
-          msg->conn->err = igmp_leavegroup(msg->msg.jl.interface, msg->msg.jl.multiaddr);
-        }
-#endif /* LWIP_UDP */
-#if (LWIP_TCP || LWIP_RAW)
-      } else {
-        msg->conn->err = ERR_VAL;
-#endif /* (LWIP_TCP || LWIP_RAW) */
-      }
-    }
-  }
-  TCPIP_APIMSG_ACK(msg);
-}
-#endif /* LWIP_IGMP */
-
-#if LWIP_DNS
-/**
- * Callback function that is called when DNS name is resolved
- * (or on timeout). A waiting application thread is waked up by
- * signaling the semaphore.
- */
-static void
-do_dns_found(const char *name, struct ip_addr *ipaddr, void *arg)
-{
-  struct dns_api_msg *msg = (struct dns_api_msg*)arg;
-
-  LWIP_ASSERT("DNS response for wrong host name", strcmp(msg->name, name) == 0);
-
-  if (ipaddr == NULL) {
-    /* timeout or memory error */
-    *msg->err = ERR_VAL;
-  } else {
-    /* address was resolved */
-    *msg->err = ERR_OK;
-    *msg->addr = *ipaddr;
-  }
-  /* wake up the application task waiting in netconn_gethostbyname */
-  sys_sem_signal(msg->sem);
-}
-
-/**
- * Execute a DNS query
- * Called from netconn_gethostbyname
- *
- * @param arg the dns_api_msg pointing to the query
- */
-void
-do_gethostbyname(void *arg)
-{
-  struct dns_api_msg *msg = (struct dns_api_msg*)arg;
-
-  *msg->err = dns_gethostbyname(msg->name, msg->addr, do_dns_found, msg);
-  if (*msg->err != ERR_INPROGRESS) {
-    /* on error or immediate success, wake up the application
-     * task waiting in netconn_gethostbyname */
-    sys_sem_signal(msg->sem);
-  }
-}
-#endif /* LWIP_DNS */
 
 #endif /* LWIP_NETCONN */

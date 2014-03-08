@@ -131,17 +131,15 @@
       <OutputFile>.\Release/lwipwin32.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
-  <ItemGroup>    
+  <ItemGroup>
     <ClCompile Include="..\lwip\api\api_lib.c" />
     <ClCompile Include="..\lwip\api\api_msg.c" />
     <ClCompile Include="..\lwip\api\err.c" />
     <ClCompile Include="..\lwip\api\netbuf.c" />
-    <ClCompile Include="..\lwip\api\netdb.c" />
     <ClCompile Include="..\lwip\api\netifapi.c" />
     <ClCompile Include="..\lwip\api\sockets.c" />
     <ClCompile Include="..\lwip\api\tcpip.c" />
     <ClCompile Include="..\lwip\core\dhcp.c" />
-    <ClCompile Include="..\lwip\core\dns.c" />
     <ClCompile Include="..\lwip\core\init.c" />
     <ClCompile Include="..\lwip\core\mem.c" />
     <ClCompile Include="..\lwip\core\memp.c" />
@@ -156,24 +154,17 @@
     <ClCompile Include="..\lwip\core\udp.c" />
     <ClCompile Include="..\lwip\core\ipv4\autoip.c" />
     <ClCompile Include="..\lwip\core\ipv4\icmp.c" />
-    <ClCompile Include="..\lwip\core\ipv4\igmp.c" />
     <ClCompile Include="..\lwip\core\ipv4\inet.c" />
     <ClCompile Include="..\lwip\core\ipv4\inet_chksum.c" />
     <ClCompile Include="..\lwip\core\ipv4\ip.c" />
     <ClCompile Include="..\lwip\core\ipv4\ip_addr.c" />
     <ClCompile Include="..\lwip\core\ipv4\ip_frag.c" />
-    <ClCompile Include="..\lwip\core\snmp\asn1_dec.c" />
-    <ClCompile Include="..\lwip\core\snmp\asn1_enc.c" />
-    <ClCompile Include="..\lwip\core\snmp\mib2.c" />
-    <ClCompile Include="..\lwip\core\snmp\mib_structs.c" />
-    <ClCompile Include="..\lwip\core\snmp\msg_in.c" />
-    <ClCompile Include="..\lwip\core\snmp\msg_out.c" />
     <ClCompile Include="..\lwip\netif\etharp.c" />
     <ClCompile Include="..\lwip\netif\ethernetif.c" />
     <ClCompile Include="..\lwip\netif\loopif.c" />
     <ClCompile Include="..\lwip\arch\queue.c" />
     <ClCompile Include="..\lwip\arch\sys_arch.c" />
-	<ClCompile Include="lwipwin32.c" />
+    <ClCompile Include="lwipwin32.c" />
     <ClCompile Include="pcap\net_tap.c" />
     <ClCompile Include="app\http.c" />
     <ClCompile Include="app\http2.c" />

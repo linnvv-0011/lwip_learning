@@ -47,11 +47,9 @@
 #include "lwip/inet_chksum.h"
 #include "lwip/netif.h"
 #include "lwip/icmp.h"
-#include "lwip/igmp.h"
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-#include "lwip/snmp.h"
 #include "lwip/dhcp.h"
 #include "lwip/stats.h"
 #include "arch/perf.h"
@@ -124,7 +122,6 @@ ip_route(struct ip_addr *dest)
   if ((netif_default == NULL) || (!netif_is_up(netif_default))) {
     LWIP_DEBUGF(IP_DEBUG | 2, ("ip_route: No route to 0x%"X32_F"\n", dest->addr));
     IP_STATS_INC(ip.rterr);
-    snmp_inc_ipoutnoroutes();
     return NULL;
   }
   /* no matching netif found, use default netif */
@@ -153,14 +150,12 @@ ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
   if (netif == NULL) {
     LWIP_DEBUGF(IP_DEBUG, ("ip_forward: no forwarding route for 0x%"X32_F" found\n",
                       iphdr->dest.addr));
-    snmp_inc_ipoutnoroutes();
     return (struct netif *)NULL;
   }
   /* Do not forward packets onto the same network interface on which
    * they arrived. */
   if (netif == inp) {
     LWIP_DEBUGF(IP_DEBUG, ("ip_forward: not bouncing packets back on incoming interface.\n"));
-    snmp_inc_ipoutnoroutes();
     return (struct netif *)NULL;
   }
 
@@ -168,7 +163,6 @@ ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
   IPH_TTL_SET(iphdr, IPH_TTL(iphdr) - 1);
   /* send ICMP if TTL == 0 */
   if (IPH_TTL(iphdr) == 0) {
-    snmp_inc_ipinhdrerrors();
 #if LWIP_ICMP
     /* Don't send ICMP messages in response to ICMP messages */
     if (IPH_PROTO(iphdr) != IP_PROTO_ICMP) {
@@ -190,7 +184,6 @@ ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
 
   IP_STATS_INC(ip.fw);
   IP_STATS_INC(ip.xmit);
-  snmp_inc_ipforwdatagrams();
 
   PERF_STOP("ip_forward");
   /* transmit pbuf on chosen interface */
@@ -225,7 +218,6 @@ ip_input(struct pbuf *p, struct netif *inp)
 #endif /* LWIP_DHCP */
 
   IP_STATS_INC(ip.recv);
-  snmp_inc_ipinreceives();
 
   /* identify the IP header */
   iphdr = p->payload;
@@ -235,7 +227,6 @@ ip_input(struct pbuf *p, struct netif *inp)
     pbuf_free(p);
     IP_STATS_INC(ip.err);
     IP_STATS_INC(ip.drop);
-    snmp_inc_ipinhdrerrors();
     return ERR_OK;
   }
 
@@ -259,7 +250,6 @@ ip_input(struct pbuf *p, struct netif *inp)
     pbuf_free(p);
     IP_STATS_INC(ip.lenerr);
     IP_STATS_INC(ip.drop);
-    snmp_inc_ipindiscards();
     return ERR_OK;
   }
 
@@ -272,7 +262,6 @@ ip_input(struct pbuf *p, struct netif *inp)
     pbuf_free(p);
     IP_STATS_INC(ip.chkerr);
     IP_STATS_INC(ip.drop);
-    snmp_inc_ipinhdrerrors();
     return ERR_OK;
   }
 #endif
@@ -282,15 +271,6 @@ ip_input(struct pbuf *p, struct netif *inp)
   pbuf_realloc(p, iphdr_len);
 
   /* match packet against an interface, i.e. is this packet for us? */
-#if LWIP_IGMP
-  if (ip_addr_ismulticast(&(iphdr->dest))) {
-    if ((inp->flags & NETIF_FLAG_IGMP) && (igmp_lookfor_group(inp, &(iphdr->dest)))) {
-      netif = inp;
-    } else {
-      netif = NULL;
-    }
-  } else
-#endif /* LWIP_IGMP */
   {
     /* start trying with inp. if that's not acceptable, start walking the
        list of configured netifs.
@@ -358,8 +338,6 @@ ip_input(struct pbuf *p, struct netif *inp)
       /* free (drop) packet pbufs */
       pbuf_free(p);
       IP_STATS_INC(ip.drop);
-      snmp_inc_ipinaddrerrors();
-      snmp_inc_ipindiscards();
       return ERR_OK;
     }
   }
@@ -375,10 +353,6 @@ ip_input(struct pbuf *p, struct netif *inp)
       ip_forward(p, iphdr, inp);
     } else
 #endif /* IP_FORWARD */
-    {
-      snmp_inc_ipinaddrerrors();
-      snmp_inc_ipindiscards();
-    }
     pbuf_free(p);
     return ERR_OK;
   }
@@ -401,25 +375,18 @@ ip_input(struct pbuf *p, struct netif *inp)
     IP_STATS_INC(ip.opterr);
     IP_STATS_INC(ip.drop);
     /* unsupported protocol feature */
-    snmp_inc_ipinunknownprotos();
     return ERR_OK;
 #endif /* IP_REASSEMBLY */
   }
 
 #if IP_OPTIONS_ALLOWED == 0 /* no support for IP options in the IP header? */
 
-#if LWIP_IGMP
-  /* there is an extra "router alert" option in IGMP messages which we allow for but do not police */
-  if((iphdr_hlen > IP_HLEN &&  (IPH_PROTO(iphdr) != IP_PROTO_IGMP)) {
-#else
   if (iphdr_hlen > IP_HLEN) {
-#endif /* LWIP_IGMP */
     LWIP_DEBUGF(IP_DEBUG | 2, ("IP packet dropped since there were IP options (while IP_OPTIONS_ALLOWED == 0).\n"));
     pbuf_free(p);
     IP_STATS_INC(ip.opterr);
     IP_STATS_INC(ip.drop);
     /* unsupported protocol feature */
-    snmp_inc_ipinunknownprotos();
     return ERR_OK;
   }
 #endif /* IP_OPTIONS_ALLOWED == 0 */
@@ -444,27 +411,19 @@ ip_input(struct pbuf *p, struct netif *inp)
 #if LWIP_UDPLITE
     case IP_PROTO_UDPLITE:
 #endif /* LWIP_UDPLITE */
-      snmp_inc_ipindelivers();
       udp_input(p, inp);
       break;
 #endif /* LWIP_UDP */
 #if LWIP_TCP
     case IP_PROTO_TCP:
-      snmp_inc_ipindelivers();
       tcp_input(p, inp);
       break;
 #endif /* LWIP_TCP */
 #if LWIP_ICMP
     case IP_PROTO_ICMP:
-      snmp_inc_ipindelivers();
       icmp_input(p, inp);
       break;
 #endif /* LWIP_ICMP */
-#if LWIP_IGMP
-    case IP_PROTO_IGMP:
-      igmp_input(p,inp,&(iphdr->dest));
-      break;
-#endif /* LWIP_IGMP */
     default:
 #if LWIP_ICMP
       /* send ICMP destination protocol unreachable unless is was a broadcast */
@@ -480,7 +439,6 @@ ip_input(struct pbuf *p, struct netif *inp)
 
       IP_STATS_INC(ip.proterr);
       IP_STATS_INC(ip.drop);
-      snmp_inc_ipinunknownprotos();
     }
   }
 
@@ -520,55 +478,18 @@ ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
              u8_t ttl, u8_t tos,
              u8_t proto, struct netif *netif)
 {
-#if IP_OPTIONS_SEND
-  return ip_output_if_opt(p, src, dest, ttl, tos, proto, netif, NULL, 0);
-}
-
-/**
- * Same as ip_output_if() but with the possibility to include IP options:
- *
- * @ param ip_options pointer to the IP options, copied into the IP header
- * @ param optlen length of ip_options
- */
-err_t ip_output_if_opt(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
-       u8_t ttl, u8_t tos, u8_t proto, struct netif *netif, void *ip_options,
-       u16_t optlen)
-{
-#endif /* IP_OPTIONS_SEND */
   struct ip_hdr *iphdr;
   static u16_t ip_id = 0;
 
-  snmp_inc_ipoutrequests();
 
   /* Should the IP header be generated or is it already included in p? */
   if (dest != IP_HDRINCL) {
     u16_t ip_hlen = IP_HLEN;
-#if IP_OPTIONS_SEND
-    u16_t optlen_aligned = 0;
-    if (optlen != 0) {
-      /* round up to a multiple of 4 */
-      optlen_aligned = ((optlen + 3) & ~3);
-      ip_hlen += optlen_aligned;
-      /* First write in the IP options */
-      if (pbuf_header(p, optlen_aligned)) {
-        LWIP_DEBUGF(IP_DEBUG | 2, ("ip_output_if_opt: not enough room for IP options in pbuf\n"));
-        IP_STATS_INC(ip.err);
-        snmp_inc_ipoutdiscards();
-        return ERR_BUF;
-      }
-      MEMCPY(p->payload, ip_options, optlen);
-      if (optlen < optlen_aligned) {
-        /* zero the remaining bytes */
-        memset(((char*)p->payload) + optlen, 0, optlen_aligned - optlen);
-      }
-    }
-#endif /* IP_OPTIONS_SEND */
     /* generate IP header */
     if (pbuf_header(p, IP_HLEN)) {
       LWIP_DEBUGF(IP_DEBUG | 2, ("ip_output: not enough room for IP header in pbuf\n"));
 
       IP_STATS_INC(ip.err);
-      snmp_inc_ipoutdiscards();
       return ERR_BUF;
     }
 

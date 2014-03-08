@@ -49,7 +49,6 @@
 #include "lwip/ip.h"
 #include "lwip/def.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 
 #include <string.h>
 
@@ -87,7 +86,6 @@ icmp_input(struct pbuf *p, struct netif *inp)
   s16_t hlen;
 
   ICMP_STATS_INC(icmp.recv);
-  snmp_inc_icmpinmsgs();
 
 
   iphdr = p->payload;
@@ -136,7 +134,6 @@ icmp_input(struct pbuf *p, struct netif *inp)
       LWIP_DEBUGF(ICMP_DEBUG, ("icmp_input: checksum failed for received ICMP echo\n"));
       pbuf_free(p);
       ICMP_STATS_INC(icmp.chkerr);
-      snmp_inc_icmpinerrors();
       return;
     }
 #if LWIP_ICMP_ECHO_CHECK_INPUT_PBUF_LEN
@@ -204,10 +201,6 @@ icmp_input(struct pbuf *p, struct netif *inp)
 #endif /* CHECKSUM_GEN_IP */
 
     ICMP_STATS_INC(icmp.xmit);
-    /* increase number of messages attempted to send */
-    snmp_inc_icmpoutmsgs();
-    /* increase number of echo replies attempted to send */
-    snmp_inc_icmpoutechoreps();
 
     if(pbuf_header(p, hlen)) {
       LWIP_ASSERT("Can't move over header in packet", 0);
@@ -231,13 +224,11 @@ icmp_input(struct pbuf *p, struct netif *inp)
 lenerr:
   pbuf_free(p);
   ICMP_STATS_INC(icmp.lenerr);
-  snmp_inc_icmpinerrors();
   return;
 #if LWIP_ICMP_ECHO_CHECK_INPUT_PBUF_LEN
 memerr:
   pbuf_free(p);
   ICMP_STATS_INC(icmp.err);
-  snmp_inc_icmpinerrors();
   return;
 #endif /* LWIP_ICMP_ECHO_CHECK_INPUT_PBUF_LEN */
 }
@@ -320,10 +311,6 @@ icmp_send_response(struct pbuf *p, u8_t type, u8_t code)
   icmphdr->chksum = 0;
   icmphdr->chksum = inet_chksum(icmphdr, q->len);
   ICMP_STATS_INC(icmp.xmit);
-  /* increase number of messages attempted to send */
-  snmp_inc_icmpoutmsgs();
-  /* increase number of destination unreachable messages attempted to send */
-  snmp_inc_icmpouttimeexcds();
   ip_output(q, NULL, &(iphdr->src), ICMP_TTL, 0, IP_PROTO_ICMP);
   pbuf_free(q);
 }

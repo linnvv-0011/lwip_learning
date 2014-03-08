@@ -59,7 +59,6 @@
 #include "lwip/netif.h"
 #include "lwip/icmp.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 #include "arch/perf.h"
 #include "lwip/dhcp.h"
 
@@ -106,7 +105,6 @@ udp_input(struct pbuf *p, struct netif *inp)
                 ("udp_input: short UDP datagram (%"U16_F" bytes) discarded\n", p->tot_len));
     UDP_STATS_INC(udp.lenerr);
     UDP_STATS_INC(udp.drop);
-    snmp_inc_udpinerrors();
     pbuf_free(p);
     goto end;
   }
@@ -175,9 +173,6 @@ udp_input(struct pbuf *p, struct netif *inp)
       if ((pcb->local_port == dest) &&
           ((!broadcast && ip_addr_isany(&pcb->local_ip)) ||
            ip_addr_cmp(&(pcb->local_ip), &(iphdr->dest)) ||
-#if LWIP_IGMP
-           ip_addr_ismulticast(&(iphdr->dest)) ||
-#endif /* LWIP_IGMP */
 #if IP_SOF_BROADCAST_RECV
            (broadcast && (pcb->so_options & SOF_BROADCAST)))) {
 #else  /* IP_SOF_BROADCAST_RECV */
@@ -233,7 +228,6 @@ udp_input(struct pbuf *p, struct netif *inp)
              checksum! (Again, see RFC 3828 chap. 3.1) */
           UDP_STATS_INC(udp.chkerr);
           UDP_STATS_INC(udp.drop);
-          snmp_inc_udpinerrors();
           pbuf_free(p);
           goto end;
         }
@@ -245,7 +239,6 @@ udp_input(struct pbuf *p, struct netif *inp)
                     ("udp_input: UDP Lite datagram discarded due to failing checksum\n"));
         UDP_STATS_INC(udp.chkerr);
         UDP_STATS_INC(udp.drop);
-        snmp_inc_udpinerrors();
         pbuf_free(p);
         goto end;
       }
@@ -262,7 +255,6 @@ udp_input(struct pbuf *p, struct netif *inp)
                       ("udp_input: UDP datagram discarded due to failing checksum\n"));
           UDP_STATS_INC(udp.chkerr);
           UDP_STATS_INC(udp.drop);
-          snmp_inc_udpinerrors();
           pbuf_free(p);
           goto end;
         }
@@ -273,12 +265,10 @@ udp_input(struct pbuf *p, struct netif *inp)
       /* Can we cope with this failing? Just assert for now */
       LWIP_ASSERT("pbuf_header failed\n", 0);
       UDP_STATS_INC(udp.drop);
-      snmp_inc_udpinerrors();
       pbuf_free(p);
       goto end;
     }
     if (pcb != NULL) {
-      snmp_inc_udpindatagrams();
       /* callback */
       if (pcb->recv != NULL) {
         /* now the recv function is responsible for freeing p */
@@ -304,7 +294,6 @@ udp_input(struct pbuf *p, struct netif *inp)
 #endif /* LWIP_ICMP */
       UDP_STATS_INC(udp.proterr);
       UDP_STATS_INC(udp.drop);
-      snmp_inc_udpnoports();
       pbuf_free(p);
     }
   } else {
@@ -365,11 +354,7 @@ udp_sendto(struct udp_pcb *pcb, struct pbuf *p,
   LWIP_DEBUGF(UDP_DEBUG | LWIP_DBG_TRACE | 3, ("udp_send\n"));
 
   /* find the outgoing network interface for this packet */
-#if LWIP_IGMP
-  netif = ip_route((ip_addr_ismulticast(dst_ip))?(&(pcb->multicast_ip)):(dst_ip));
-#else
   netif = ip_route(dst_ip);
-#endif /* LWIP_IGMP */
 
   /* no outgoing network interface could be found? */
   if (netif == NULL) {
@@ -540,9 +525,6 @@ udp_sendto_if(struct udp_pcb *pcb, struct pbuf *p,
     netif->addr_hint = NULL;
 #endif /* LWIP_NETIF_HWADDRHINT*/
   }
-  /* TODO: must this be increased even if error occured? */
-  snmp_inc_udpoutdatagrams();
-
   /* did we chain a separate header pbuf earlier? */
   if (q != p) {
     /* free the header pbuf */
@@ -642,7 +624,6 @@ udp_bind(struct udp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
     }
   }
   pcb->local_port = port;
-  snmp_insert_udpidx_tree(pcb);
   /* pcb not active yet? */
   if (rebind == 0) {
     /* place the PCB on the active list if not already there */
@@ -775,7 +756,6 @@ udp_remove(struct udp_pcb *pcb)
 {
   struct udp_pcb *pcb2;
 
-  snmp_delete_udpidx_tree(pcb);
   /* pcb to be removed is first in list? */
   if (udp_pcbs == pcb) {
     /* make list start at 2nd pcb */

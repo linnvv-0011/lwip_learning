@@ -88,12 +88,6 @@ enum netconn_evt {
   NETCONN_EVT_SENDMINUS
 };
 
-#if LWIP_IGMP
-enum netconn_igmp {
-  NETCONN_JOIN,
-  NETCONN_LEAVE
-};
-#endif /* LWIP_IGMP */
 
 /* forward-declare some structs to avoid to include their headers */
 struct ip_pcb;
@@ -199,16 +193,6 @@ err_t             netconn_write   (struct netconn *conn,
                                    const void *dataptr, size_t size,
                                    u8_t apiflags);
 err_t             netconn_close   (struct netconn *conn);
-
-#if LWIP_IGMP
-err_t             netconn_join_leave_group (struct netconn *conn,
-                                            struct ip_addr *multiaddr,
-                                            struct ip_addr *interface,
-                                            enum netconn_igmp join_or_leave);
-#endif /* LWIP_IGMP */
-#if LWIP_DNS
-err_t             netconn_gethostbyname(const char *name, struct ip_addr *addr);
-#endif /* LWIP_DNS */
 
 #define netconn_err(conn)          ((conn)->err)
 #define netconn_recv_bufsize(conn) ((conn)->recv_bufsize)

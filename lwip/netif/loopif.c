@@ -40,7 +40,6 @@
 #if LWIP_HAVE_LOOPIF
 
 #include "netif/loopif.h"
-#include "lwip/snmp.h"
 
 /**
  * Initialize a lwip network interface structure for a loopback interface
@@ -55,8 +54,6 @@ loopif_init(struct netif *netif)
   /* initialize the snmp variables and counters inside the struct netif
    * ifSpeed: no assumption can be made!
    */
-  NETIF_INIT_SNMP(netif, snmp_ifType_softwareLoopback, 0);
-
   netif->name[0] = 'l';
   netif->name[1] = 'o';
   netif->output = netif_loop_output;

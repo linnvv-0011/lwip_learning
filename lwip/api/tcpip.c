@@ -47,12 +47,9 @@
 #include "lwip/tcp.h"
 #include "lwip/autoip.h"
 #include "lwip/dhcp.h"
-#include "lwip/igmp.h"
-#include "lwip/dns.h"
 #include "lwip/tcpip.h"
 #include "lwip/init.h"
 #include "netif/etharp.h"
-#include "netif/ppp_oe.h"
 
 /* global variables */
 static void (* tcpip_init_done)(void *arg);
@@ -187,38 +184,6 @@ autoip_timer(void *arg)
 }
 #endif /* LWIP_AUTOIP */
 
-#if LWIP_IGMP
-/**
- * Timer callback function that calls igmp_tmr() and reschedules itself.
- *
- * @param arg unused argument
- */
-static void
-igmp_timer(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip: igmp_tmr()\n"));
-  igmp_tmr();
-  sys_timeout(IGMP_TMR_INTERVAL, igmp_timer, NULL);
-}
-#endif /* LWIP_IGMP */
-
-#if LWIP_DNS
-/**
- * Timer callback function that calls dns_tmr() and reschedules itself.
- *
- * @param arg unused argument
- */
-static void
-dns_timer(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip: dns_tmr()\n"));
-  dns_tmr();
-  sys_timeout(DNS_TMR_INTERVAL, dns_timer, NULL);
-}
-#endif /* LWIP_DNS */
-
 /**
  * The main lwIP thread. This thread has exclusive access to lwIP core functions
  * (unless access to them is not locked). Other threads communicate with this
@@ -248,13 +213,6 @@ tcpip_thread(void *arg)
 #if LWIP_AUTOIP
   sys_timeout(AUTOIP_TMR_INTERVAL, autoip_timer, NULL);
 #endif /* LWIP_AUTOIP */
-#if LWIP_IGMP
-  sys_timeout(IGMP_TMR_INTERVAL, igmp_timer, NULL);
-#endif /* LWIP_IGMP */
-#if LWIP_DNS
-  sys_timeout(DNS_TMR_INTERVAL, dns_timer, NULL);
-#endif /* LWIP_DNS */
-
   if (tcpip_init_done != NULL) {
     tcpip_init_done(tcpip_init_done_arg);
   }

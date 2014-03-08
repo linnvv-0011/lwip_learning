@@ -160,22 +160,6 @@ struct linger {
 #endif /* LWIP_UDP && LWIP_UDPLITE*/
 
 
-#if LWIP_IGMP
-/*
- * Options and types for UDP multicast traffic handling
- */
-#define IP_ADD_MEMBERSHIP  3
-#define IP_DROP_MEMBERSHIP 4
-#define IP_MULTICAST_TTL   5
-#define IP_MULTICAST_IF    6
-#define IP_MULTICAST_LOOP  7
-
-typedef struct ip_mreq {
-    struct in_addr imr_multiaddr; /* IP multicast address of group */
-    struct in_addr imr_interface; /* local IP address of interface */
-} ip_mreq;
-#endif /* LWIP_IGMP */
-
 /*
  * The Type of Service provides an indication of the abstract
  * parameters of the quality of service desired.  These parameters are

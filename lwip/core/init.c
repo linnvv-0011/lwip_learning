@@ -50,10 +50,7 @@
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-#include "lwip/snmp_msg.h"
 #include "lwip/autoip.h"
-#include "lwip/igmp.h"
-#include "lwip/dns.h"
 #include "netif/etharp.h"
 
 /* Compile-time sanity checks for configuration errors.
@@ -71,17 +68,8 @@
 #if (!LWIP_UDP && LWIP_UDPLITE)
   #error "If you want to use UDP Lite, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
-#if (!LWIP_UDP && LWIP_SNMP)
-  #error "If you want to use SNMP, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
 #if (!LWIP_UDP && LWIP_DHCP)
   #error "If you want to use DHCP, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
-#if (!LWIP_UDP && LWIP_IGMP)
-  #error "If you want to use IGMP, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
-#if (!LWIP_UDP && LWIP_DNS)
-  #error "If you want to use DNS, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
 #if (LWIP_ARP && (ARP_TABLE_SIZE > 0x7f))
   #error "If you want to use ARP, ARP_TABLE_SIZE must fit in an s8_t, so, you have to reduce it in your lwipopts.h"
@@ -110,9 +98,6 @@
 #if (LWIP_TCP && TCP_LISTEN_BACKLOG && (TCP_DEFAULT_LISTEN_BACKLOG < 0) || (TCP_DEFAULT_LISTEN_BACKLOG > 0xff))
   #error "If you want to use TCP backlog, TCP_DEFAULT_LISTEN_BACKLOG must fit into an u8_t"
 #endif
-#if (LWIP_IGMP && (MEMP_NUM_IGMP_GROUP<=1))
-  #error "If you want to use IGMP, you have to define MEMP_NUM_IGMP_GROUP>1 in your lwipopts.h"
-#endif
 #if (PPP_SUPPORT && (NO_SYS==1))
   #error "If you want to use PPP, you have to define NO_SYS=0 in your lwipopts.h"
 #endif 
@@ -136,12 +121,6 @@
 #endif
 #if (!LWIP_ARP && LWIP_AUTOIP)
   #error "If you want to use AUTOIP, you have to define LWIP_ARP=1 in your lwipopts.h"
-#endif
-#if (LWIP_SNMP && (SNMP_CONCURRENT_REQUESTS<=0))
-  #error "If you want to use SNMP, you have to define SNMP_CONCURRENT_REQUESTS>=1 in your lwipopts.h"
-#endif
-#if (LWIP_SNMP && (SNMP_TRAP_DESTINATIONS<=0))
-  #error "If you want to use SNMP, you have to define SNMP_TRAP_DESTINATIONS>=1 in your lwipopts.h"
 #endif
 #if (LWIP_TCP && ((LWIP_EVENT_API && LWIP_CALLBACK_API) || (!LWIP_EVENT_API && !LWIP_CALLBACK_API)))
   #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwipopts.h"
@@ -254,16 +233,7 @@ lwip_init(void)
 #if LWIP_TCP
   tcp_init();
 #endif /* LWIP_TCP */
-#if LWIP_SNMP
-  snmp_init();
-#endif /* LWIP_SNMP */
 #if LWIP_AUTOIP
   autoip_init();
 #endif /* LWIP_AUTOIP */
-#if LWIP_IGMP
-  igmp_init();
-#endif /* LWIP_IGMP */
-#if LWIP_DNS
-  dns_init();
-#endif /* LWIP_DNS */
 }

@@ -45,7 +45,6 @@
 #include "lwip/sockets.h"
 #include "lwip/api.h"
 #include "lwip/sys.h"
-#include "lwip/igmp.h"
 #include "lwip/inet.h"
 #include "lwip/tcp.h"
 #include "lwip/raw.h"
@@ -1262,19 +1261,6 @@ lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
         err = EINVAL;
       }
       break;
-#if LWIP_IGMP
-    case IP_MULTICAST_TTL:
-      if (*optlen < sizeof(u8_t)) {
-        err = EINVAL;
-      }
-      break;
-    case IP_MULTICAST_IF:
-      if (*optlen < sizeof(struct in_addr)) {
-        err = EINVAL;
-      }
-      break;
-#endif /* LWIP_IGMP */
-
     default:
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, IPPROTO_IP, UNIMPL: optname=0x%x, ..)\n",
                                   s, optname));
@@ -1471,18 +1457,6 @@ lwip_getsockopt_internal(void *arg)
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, IPPROTO_IP, IP_TOS) = %d\n",
                   s, *(int *)optval));
       break;
-#if LWIP_IGMP
-    case IP_MULTICAST_TTL:
-      *(u8_t*)optval = sock->conn->pcb.ip->ttl;
-      LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, IPPROTO_IP, IP_MULTICAST_TTL) = %d\n",
-                  s, *(int *)optval));
-      break;
-    case IP_MULTICAST_IF:
-      ((struct in_addr*) optval)->s_addr = sock->conn->pcb.udp->multicast_ip.addr;
-      LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, IPPROTO_IP, IP_MULTICAST_IF) = 0x%"X32_F"\n",
-                  s, *(u32_t *)optval));
-      break;
-#endif /* LWIP_IGMP */
     }  /* switch (optname) */
     break;
 
@@ -1621,34 +1595,7 @@ lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t opt
         err = EINVAL;
       }
       break;
-#if LWIP_IGMP
-    case IP_MULTICAST_TTL:
-      if (optlen < sizeof(u8_t)) {
-        err = EINVAL;
-      }
-      if (NETCONNTYPE_GROUP(sock->conn->type) != NETCONN_UDP) {
-        err = EAFNOSUPPORT;
-      }
-      break;
-    case IP_MULTICAST_IF:
-      if (optlen < sizeof(struct in_addr)) {
-        err = EINVAL;
-      }
-      if (NETCONNTYPE_GROUP(sock->conn->type) != NETCONN_UDP) {
-        err = EAFNOSUPPORT;
-      }
-      break;
-    case IP_ADD_MEMBERSHIP:
-    case IP_DROP_MEMBERSHIP:
-      if (optlen < sizeof(struct ip_mreq)) {
-        err = EINVAL;
-      }
-      if (NETCONNTYPE_GROUP(sock->conn->type) != NETCONN_UDP) {
-        err = EAFNOSUPPORT;
-      }
-      break;
-#endif /* LWIP_IGMP */
-      default:
+   default:
         LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_IP, UNIMPL: optname=0x%x, ..)\n",
                     s, optname));
         err = ENOPROTOOPT;
@@ -1820,29 +1767,6 @@ lwip_setsockopt_internal(void *arg)
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, IPPROTO_IP, IP_TOS, ..)-> %d\n",
                   s, sock->conn->pcb.ip->tos));
       break;
-#if LWIP_IGMP
-    case IP_MULTICAST_TTL:
-      sock->conn->pcb.udp->ttl = (u8_t)(*(u8_t*)optval);
-      break;
-    case IP_MULTICAST_IF:
-      sock->conn->pcb.udp->multicast_ip.addr = ((struct in_addr*) optval)->s_addr;
-      break;
-    case IP_ADD_MEMBERSHIP:
-    case IP_DROP_MEMBERSHIP:
-      {
-        /* If this is a TCP or a RAW socket, ignore these options. */
-        struct ip_mreq *imr = (struct ip_mreq *)optval;
-        if(optname == IP_ADD_MEMBERSHIP){
-          data->err = igmp_joingroup((struct ip_addr*)&(imr->imr_interface.s_addr), (struct ip_addr*)&(imr->imr_multiaddr.s_addr));
-        } else {
-          data->err = igmp_leavegroup((struct ip_addr*)&(imr->imr_interface.s_addr), (struct ip_addr*)&(imr->imr_multiaddr.s_addr));
-        }
-        if(data->err != ERR_OK) {
-          data->err = EADDRNOTAVAIL;
-        }
-      }
-      break;
-#endif /* LWIP_IGMP */
     }  /* switch (optname) */
     break;
 

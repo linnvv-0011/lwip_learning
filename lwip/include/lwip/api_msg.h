@@ -41,7 +41,6 @@
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-#include "lwip/igmp.h"
 #include "lwip/api.h"
 
 #ifdef __cplusplus
@@ -87,14 +86,6 @@ struct api_msg_msg {
     struct {
       u16_t len;
     } r;
-#if LWIP_IGMP
-    /** used for do_join_leave_group */
-    struct {
-      struct ip_addr *multiaddr;
-      struct ip_addr *interface;
-      enum netconn_igmp join_or_leave;
-    } jl;
-#endif /* LWIP_IGMP */
 #if TCP_LISTEN_BACKLOG
     struct {
       u8_t backlog;
@@ -113,24 +104,6 @@ struct api_msg {
   struct api_msg_msg msg;
 };
 
-#if LWIP_DNS
-/** As do_gethostbyname requires more arguments but doesn't require a netconn,
-    it has its own struct (to avoid struct api_msg getting bigger than necessary).
-    do_gethostbyname must be called using tcpip_callback instead of tcpip_apimsg
-    (see netconn_gethostbyname). */
-struct dns_api_msg {
-  /** Hostname to query or dotted IP address string */
-  const char *name;
-  /** Rhe resolved address is stored here */
-  struct ip_addr *addr;
-  /** This semaphore is posted when the name is resolved, the application thread
-      should wait on it. */
-  sys_sem_t sem;
-  /** Errors are given back here */
-  err_t *err;
-};
-#endif /* LWIP_DNS */
-
 void do_newconn         ( struct api_msg_msg *msg);
 void do_delconn         ( struct api_msg_msg *msg);
 void do_bind            ( struct api_msg_msg *msg);
@@ -142,13 +115,6 @@ void do_recv            ( struct api_msg_msg *msg);
 void do_write           ( struct api_msg_msg *msg);
 void do_getaddr         ( struct api_msg_msg *msg);
 void do_close           ( struct api_msg_msg *msg);
-#if LWIP_IGMP
-void do_join_leave_group( struct api_msg_msg *msg);
-#endif /* LWIP_IGMP */
-
-#if LWIP_DNS
-void do_gethostbyname(void *arg);
-#endif /* LWIP_DNS */
 
 struct netconn* netconn_alloc(enum netconn_type t, netconn_callback callback);
 void netconn_free(struct netconn *conn);

@@ -269,16 +269,6 @@
 #endif
 
 /**
- * MEMP_NUM_IGMP_GROUP: The number of multicast groups whose network interfaces
- * can be members et the same time (one per netif - allsystems group -, plus one
- * per netif membership).
- * (requires the LWIP_IGMP option)
- */
-#ifndef MEMP_NUM_IGMP_GROUP
-#define MEMP_NUM_IGMP_GROUP             8
-#endif
-
-/**
  * MEMP_NUM_SYS_TIMEOUT: the number of simulateously active timeouts.
  * (requires NO_SYS==0)
  */
@@ -570,19 +560,6 @@
 #define LWIP_DHCP_AUTOIP_COOP_TRIES     9
 #endif
 
-/*
-   ----------------------------------
-   ---------- SNMP options ----------
-   ----------------------------------
-*/
-/**
- * LWIP_SNMP==1: Turn on SNMP module. UDP must be available for SNMP
- * transport.
- */
-#ifndef LWIP_SNMP
-#define LWIP_SNMP                       0
-#endif
-
 /**
  * SNMP_CONCURRENT_REQUESTS: Number of concurrent requests the module will
  * allow. At least one request buffer is required. 
@@ -591,106 +568,6 @@
 #define SNMP_CONCURRENT_REQUESTS        1
 #endif
 
-/**
- * SNMP_TRAP_DESTINATIONS: Number of trap destinations. At least one trap
- * destination is required
- */
-#ifndef SNMP_TRAP_DESTINATIONS
-#define SNMP_TRAP_DESTINATIONS          1
-#endif
-
-/**
- * SNMP_PRIVATE_MIB: 
- */
-#ifndef SNMP_PRIVATE_MIB
-#define SNMP_PRIVATE_MIB                0
-#endif
-
-/**
- * Only allow SNMP write actions that are 'safe' (e.g. disabeling netifs is not
- * a safe action and disabled when SNMP_SAFE_REQUESTS = 1).
- * Unsafe requests are disabled by default!
- */
-#ifndef SNMP_SAFE_REQUESTS
-#define SNMP_SAFE_REQUESTS              1
-#endif
-
-/*
-   ----------------------------------
-   ---------- IGMP options ----------
-   ----------------------------------
-*/
-/**
- * LWIP_IGMP==1: Turn on IGMP module. 
- */
-#ifndef LWIP_IGMP
-#define LWIP_IGMP                       0
-#endif
-
-/*
-   ----------------------------------
-   ---------- DNS options -----------
-   ----------------------------------
-*/
-/**
- * LWIP_DNS==1: Turn on DNS module. UDP must be available for DNS
- * transport.
- */
-#ifndef LWIP_DNS
-#define LWIP_DNS                        0
-#endif
-
-/** DNS maximum number of entries to maintain locally. */
-#ifndef DNS_TABLE_SIZE
-#define DNS_TABLE_SIZE                  4
-#endif
-
-/** DNS maximum host name length supported in the name table. */
-#ifndef DNS_MAX_NAME_LENGTH
-#define DNS_MAX_NAME_LENGTH             256
-#endif
-
-/** The maximum of DNS servers */
-#ifndef DNS_MAX_SERVERS
-#define DNS_MAX_SERVERS                 2
-#endif
-
-/** DNS do a name checking between the query and the response. */
-#ifndef DNS_DOES_NAME_CHECK
-#define DNS_DOES_NAME_CHECK             1
-#endif
-
-/** DNS use a local buffer if DNS_USES_STATIC_BUF=0, a static one if
-    DNS_USES_STATIC_BUF=1, or a dynamic one if DNS_USES_STATIC_BUF=2.
-    The buffer will be of size DNS_MSG_SIZE */
-#ifndef DNS_USES_STATIC_BUF
-#define DNS_USES_STATIC_BUF             1
-#endif
-
-/** DNS message max. size. Default value is RFC compliant. */
-#ifndef DNS_MSG_SIZE
-#define DNS_MSG_SIZE                    512
-#endif
-
-/** DNS_LOCAL_HOSTLIST: Implements a local host-to-address list. If enabled,
- *  you have to define
- *    #define DNS_LOCAL_HOSTLIST_INIT {{"host1", 0x123}, {"host2", 0x234}}
- *  (an array of structs name/address, where address is an u32_t in network
- *  byte order).
- *
- *  Instead, you can also use an external function:
- *  #define DNS_LOOKUP_LOCAL_EXTERN(x) extern u32_t my_lookup_function(const char *name)
- *  that returns the IP address or INADDR_NONE if not found.
- */
-#ifndef DNS_LOCAL_HOSTLIST
-#define DNS_LOCAL_HOSTLIST              0
-#endif /* DNS_LOCAL_HOSTLIST */
-
-/** If this is turned on, the local host-list can be dynamically changed
- *  at runtime. */
-#ifndef DNS_LOCAL_HOSTLIST_IS_DYNAMIC
-#define DNS_LOCAL_HOSTLIST_IS_DYNAMIC   0
-#endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
 
 /*
    ---------------------------------
@@ -1293,13 +1170,6 @@
  */
 #ifndef ICMP_STATS
 #define ICMP_STATS                      1
-#endif
-
-/**
- * IGMP_STATS==1: Enable IGMP stats.
- */
-#ifndef IGMP_STATS
-#define IGMP_STATS                      (LWIP_IGMP)
 #endif
 
 /**

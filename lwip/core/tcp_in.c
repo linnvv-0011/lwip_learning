@@ -54,7 +54,6 @@
 #include "lwip/inet.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/stats.h"
-#include "lwip/snmp.h"
 #include "arch/perf.h"
 
 /* These variables are global to all functions involved in the input
@@ -100,7 +99,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
   PERF_START;
 
   TCP_STATS_INC(tcp.recv);
-  snmp_inc_tcpinsegs();
 
   iphdr = p->payload;
   tcphdr = (struct tcp_hdr *)((u8_t *)p->payload + IPH_HL(iphdr) * 4);
@@ -115,7 +113,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
     LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: short packet (%"U16_F" bytes) discarded\n", p->tot_len));
     TCP_STATS_INC(tcp.lenerr);
     TCP_STATS_INC(tcp.drop);
-    snmp_inc_tcpinerrs();
     pbuf_free(p);
     return;
   }
@@ -125,7 +122,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
       ip_addr_ismulticast(&(iphdr->dest))) {
     TCP_STATS_INC(tcp.proterr);
     TCP_STATS_INC(tcp.drop);
-    snmp_inc_tcpinerrs();
     pbuf_free(p);
     return;
   }
@@ -143,7 +139,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
 #endif /* TCP_DEBUG */
     TCP_STATS_INC(tcp.chkerr);
     TCP_STATS_INC(tcp.drop);
-    snmp_inc_tcpinerrs();
     pbuf_free(p);
     return;
   }
@@ -157,7 +152,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
     LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: short packet\n"));
     TCP_STATS_INC(tcp.lenerr);
     TCP_STATS_INC(tcp.drop);
-    snmp_inc_tcpinerrs();
     pbuf_free(p);
     return;
   }
@@ -283,7 +277,6 @@ tcp_input(struct pbuf *p, struct netif *inp)
         /* drop incoming packets, because pcb is "full" */
         LWIP_DEBUGF(TCP_INPUT_DEBUG, ("tcp_input: drop incoming packets, because pcb is \"full\"\n"));
         TCP_STATS_INC(tcp.drop);
-        snmp_inc_tcpinerrs();
         pbuf_free(p);
         return;
       }
@@ -450,8 +443,6 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
 #if TCP_CALCULATE_EFF_SEND_MSS
     npcb->mss = tcp_eff_send_mss(npcb->mss, &(npcb->remote_ip));
 #endif /* TCP_CALCULATE_EFF_SEND_MSS */
-
-    snmp_inc_tcppassiveopens();
 
     /* Send a SYN|ACK together with the MSS option. */
     rc = tcp_enqueue(npcb, NULL, 0, TCP_SYN | TCP_ACK, 0, TF_SEG_OPTS_MSS
