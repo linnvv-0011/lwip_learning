@@ -42,12 +42,6 @@
 
 #include "lwip/inet.h"
 #include "lwip/pbuf.h"
-#if LWIP_DHCP
-struct dhcp;
-#endif
-#if LWIP_AUTOIP
-struct autoip;
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -119,14 +113,7 @@ struct netif {
   /** This field can be set by the device driver and could point
    *  to state information for the device. */
   void *state;
-#if LWIP_DHCP
-  /** the DHCP client state information for this netif */
-  struct dhcp *dhcp;
-#endif /* LWIP_DHCP */
-#if LWIP_AUTOIP
-  /** the AutoIP client state information for this netif */
-  struct autoip *autoip;
-#endif
+
 #if LWIP_NETIF_HOSTNAME
   /* the hostname for this netif, NULL is a valid value */
   char*  hostname;

@@ -45,8 +45,6 @@
 #include "lwip/pbuf.h"
 #include "lwip/ip_frag.h"
 #include "lwip/tcp.h"
-#include "lwip/autoip.h"
-#include "lwip/dhcp.h"
 #include "lwip/tcpip.h"
 #include "lwip/init.h"
 #include "netif/etharp.h"
@@ -138,52 +136,6 @@ arp_timer(void *arg)
 }
 #endif /* LWIP_ARP */
 
-#if LWIP_DHCP
-/**
- * Timer callback function that calls dhcp_coarse_tmr() and reschedules itself.
- *
- * @param arg unused argument
- */
-static void
-dhcp_timer_coarse(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip: dhcp_coarse_tmr()\n"));
-  dhcp_coarse_tmr();
-  sys_timeout(DHCP_COARSE_TIMER_MSECS, dhcp_timer_coarse, NULL);
-}
-
-/**
- * Timer callback function that calls dhcp_fine_tmr() and reschedules itself.
- *
- * @param arg unused argument
- */
-static void
-dhcp_timer_fine(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip: dhcp_fine_tmr()\n"));
-  dhcp_fine_tmr();
-  sys_timeout(DHCP_FINE_TIMER_MSECS, dhcp_timer_fine, NULL);
-}
-#endif /* LWIP_DHCP */
-
-#if LWIP_AUTOIP
-/**
- * Timer callback function that calls autoip_tmr() and reschedules itself.
- *
- * @param arg unused argument
- */
-static void
-autoip_timer(void *arg)
-{
-  LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TCPIP_DEBUG, ("tcpip: autoip_tmr()\n"));
-  autoip_tmr();
-  sys_timeout(AUTOIP_TMR_INTERVAL, autoip_timer, NULL);
-}
-#endif /* LWIP_AUTOIP */
-
 /**
  * The main lwIP thread. This thread has exclusive access to lwIP core functions
  * (unless access to them is not locked). Other threads communicate with this
@@ -206,13 +158,6 @@ tcpip_thread(void *arg)
 #if LWIP_ARP
   sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
 #endif /* LWIP_ARP */
-#if LWIP_DHCP
-  sys_timeout(DHCP_COARSE_TIMER_MSECS, dhcp_timer_coarse, NULL);
-  sys_timeout(DHCP_FINE_TIMER_MSECS, dhcp_timer_fine, NULL);
-#endif /* LWIP_DHCP */
-#if LWIP_AUTOIP
-  sys_timeout(AUTOIP_TMR_INTERVAL, autoip_timer, NULL);
-#endif /* LWIP_AUTOIP */
   if (tcpip_init_done != NULL) {
     tcpip_init_done(tcpip_init_done_arg);
   }

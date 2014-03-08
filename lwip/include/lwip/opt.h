@@ -511,65 +511,6 @@
 #endif
 
 /*
-   ----------------------------------
-   ---------- DHCP options ----------
-   ----------------------------------
-*/
-/**
- * LWIP_DHCP==1: Enable DHCP module.
- */
-#ifndef LWIP_DHCP
-#define LWIP_DHCP                       0
-#endif
-
-/**
- * DHCP_DOES_ARP_CHECK==1: Do an ARP check on the offered address.
- */
-#ifndef DHCP_DOES_ARP_CHECK
-#define DHCP_DOES_ARP_CHECK             ((LWIP_DHCP) && (LWIP_ARP))
-#endif
-
-/*
-   ------------------------------------
-   ---------- AUTOIP options ----------
-   ------------------------------------
-*/
-/**
- * LWIP_AUTOIP==1: Enable AUTOIP module.
- */
-#ifndef LWIP_AUTOIP
-#define LWIP_AUTOIP                     0
-#endif
-
-/**
- * LWIP_DHCP_AUTOIP_COOP==1: Allow DHCP and AUTOIP to be both enabled on
- * the same interface at the same time.
- */
-#ifndef LWIP_DHCP_AUTOIP_COOP
-#define LWIP_DHCP_AUTOIP_COOP           0
-#endif
-
-/**
- * LWIP_DHCP_AUTOIP_COOP_TRIES: Set to the number of DHCP DISCOVER probes
- * that should be sent before falling back on AUTOIP. This can be set
- * as low as 1 to get an AutoIP address very quickly, but you should
- * be prepared to handle a changing IP address when DHCP overrides
- * AutoIP.
- */
-#ifndef LWIP_DHCP_AUTOIP_COOP_TRIES
-#define LWIP_DHCP_AUTOIP_COOP_TRIES     9
-#endif
-
-/**
- * SNMP_CONCURRENT_REQUESTS: Number of concurrent requests the module will
- * allow. At least one request buffer is required. 
- */
-#ifndef SNMP_CONCURRENT_REQUESTS
-#define SNMP_CONCURRENT_REQUESTS        1
-#endif
-
-
-/*
    ---------------------------------
    ---------- UDP options ----------
    ---------------------------------
@@ -869,18 +810,6 @@
 
 /*
    ------------------------------------
-   ---------- SLIPIF options ----------
-   ------------------------------------
-*/
-/**
- * LWIP_HAVE_SLIPIF==1: Support slip interface and slipif.c
- */
-#ifndef LWIP_HAVE_SLIPIF
-#define LWIP_HAVE_SLIPIF                0
-#endif
-
-/*
-   ------------------------------------
    ---------- Thread options ----------
    ------------------------------------
 */
@@ -916,56 +845,6 @@
  */
 #ifndef TCPIP_MBOX_SIZE
 #define TCPIP_MBOX_SIZE                 0
-#endif
-
-/**
- * SLIPIF_THREAD_NAME: The name assigned to the slipif_loop thread.
- */
-#ifndef SLIPIF_THREAD_NAME
-#define SLIPIF_THREAD_NAME             "slipif_loop"
-#endif
-
-/**
- * SLIP_THREAD_STACKSIZE: The stack size used by the slipif_loop thread.
- * The stack size value itself is platform-dependent, but is passed to
- * sys_thread_new() when the thread is created.
- */
-#ifndef SLIPIF_THREAD_STACKSIZE
-#define SLIPIF_THREAD_STACKSIZE         0
-#endif
-
-/**
- * SLIPIF_THREAD_PRIO: The priority assigned to the slipif_loop thread.
- * The priority value itself is platform-dependent, but is passed to
- * sys_thread_new() when the thread is created.
- */
-#ifndef SLIPIF_THREAD_PRIO
-#define SLIPIF_THREAD_PRIO              1
-#endif
-
-/**
- * PPP_THREAD_NAME: The name assigned to the pppMain thread.
- */
-#ifndef PPP_THREAD_NAME
-#define PPP_THREAD_NAME                "pppMain"
-#endif
-
-/**
- * PPP_THREAD_STACKSIZE: The stack size used by the pppMain thread.
- * The stack size value itself is platform-dependent, but is passed to
- * sys_thread_new() when the thread is created.
- */
-#ifndef PPP_THREAD_STACKSIZE
-#define PPP_THREAD_STACKSIZE            0
-#endif
-
-/**
- * PPP_THREAD_PRIO: The priority assigned to the pppMain thread.
- * The priority value itself is platform-dependent, but is passed to
- * sys_thread_new() when the thread is created.
- */
-#ifndef PPP_THREAD_PRIO
-#define PPP_THREAD_PRIO                 1
 #endif
 
 /**
@@ -1215,7 +1094,6 @@
 #define IP_STATS                        0
 #define IPFRAG_STATS                    0
 #define ICMP_STATS                      0
-#define IGMP_STATS                      0
 #define UDP_STATS                       0
 #define TCP_STATS                       0
 #define MEM_STATS                       0
@@ -1224,167 +1102,6 @@
 #define LWIP_STATS_DISPLAY              0
 
 #endif /* LWIP_STATS */
-
-/*
-   ---------------------------------
-   ---------- PPP options ----------
-   ---------------------------------
-*/
-/**
- * PPP_SUPPORT==1: Enable PPP.
- */
-#ifndef PPP_SUPPORT
-#define PPP_SUPPORT                     0
-#endif
-
-/**
- * PPPOE_SUPPORT==1: Enable PPP Over Ethernet
- */
-#ifndef PPPOE_SUPPORT
-#define PPPOE_SUPPORT                   0
-#endif
-
-/**
- * PPPOS_SUPPORT==1: Enable PPP Over Serial
- */
-#ifndef PPPOS_SUPPORT
-#define PPPOS_SUPPORT                   PPP_SUPPORT
-#endif
-
-#if PPP_SUPPORT
-
-/**
- * NUM_PPP: Max PPP sessions.
- */
-#ifndef NUM_PPP
-#define NUM_PPP                         1
-#endif
-
-/**
- * PAP_SUPPORT==1: Support PAP.
- */
-#ifndef PAP_SUPPORT
-#define PAP_SUPPORT                     0
-#endif
-
-/**
- * CHAP_SUPPORT==1: Support CHAP.
- */
-#ifndef CHAP_SUPPORT
-#define CHAP_SUPPORT                    0
-#endif
-
-/**
- * MSCHAP_SUPPORT==1: Support MSCHAP. CURRENTLY NOT SUPPORTED! DO NOT SET!
- */
-#ifndef MSCHAP_SUPPORT
-#define MSCHAP_SUPPORT                  0
-#endif
-
-/**
- * CBCP_SUPPORT==1: Support CBCP. CURRENTLY NOT SUPPORTED! DO NOT SET!
- */
-#ifndef CBCP_SUPPORT
-#define CBCP_SUPPORT                    0
-#endif
-
-/**
- * CCP_SUPPORT==1: Support CCP. CURRENTLY NOT SUPPORTED! DO NOT SET!
- */
-#ifndef CCP_SUPPORT
-#define CCP_SUPPORT                     0
-#endif
-
-/**
- * VJ_SUPPORT==1: Support VJ header compression.
- */
-#ifndef VJ_SUPPORT
-#define VJ_SUPPORT                      0
-#endif
-
-/**
- * MD5_SUPPORT==1: Support MD5 (see also CHAP).
- */
-#ifndef MD5_SUPPORT
-#define MD5_SUPPORT                     0
-#endif
-
-/*
- * Timeouts
- */
-#ifndef FSM_DEFTIMEOUT
-#define FSM_DEFTIMEOUT                  6       /* Timeout time in seconds */
-#endif
-
-#ifndef FSM_DEFMAXTERMREQS
-#define FSM_DEFMAXTERMREQS              2       /* Maximum Terminate-Request transmissions */
-#endif
-
-#ifndef FSM_DEFMAXCONFREQS
-#define FSM_DEFMAXCONFREQS              10      /* Maximum Configure-Request transmissions */
-#endif
-
-#ifndef FSM_DEFMAXNAKLOOPS
-#define FSM_DEFMAXNAKLOOPS              5       /* Maximum number of nak loops */
-#endif
-
-#ifndef UPAP_DEFTIMEOUT
-#define UPAP_DEFTIMEOUT                 6       /* Timeout (seconds) for retransmitting req */
-#endif
-
-#ifndef UPAP_DEFREQTIME
-#define UPAP_DEFREQTIME                 30      /* Time to wait for auth-req from peer */
-#endif
-
-#ifndef CHAP_DEFTIMEOUT
-#define CHAP_DEFTIMEOUT                 6       /* Timeout time in seconds */
-#endif
-
-#ifndef CHAP_DEFTRANSMITS
-#define CHAP_DEFTRANSMITS               10      /* max # times to send challenge */
-#endif
-
-/* Interval in seconds between keepalive echo requests, 0 to disable. */
-#ifndef LCP_ECHOINTERVAL
-#define LCP_ECHOINTERVAL                0
-#endif
-
-/* Number of unanswered echo requests before failure. */
-#ifndef LCP_MAXECHOFAILS
-#define LCP_MAXECHOFAILS                3
-#endif
-
-/* Max Xmit idle time (in jiffies) before resend flag char. */
-#ifndef PPP_MAXIDLEFLAG
-#define PPP_MAXIDLEFLAG                 100
-#endif
-
-/*
- * Packet sizes
- *
- * Note - lcp shouldn't be allowed to negotiate stuff outside these
- *    limits.  See lcp.h in the pppd directory.
- * (XXX - these constants should simply be shared by lcp.c instead
- *    of living in lcp.h)
- */
-#define PPP_MTU                         1500     /* Default MTU (size of Info field) */
-#ifndef PPP_MAXMTU
-/* #define PPP_MAXMTU  65535 - (PPP_HDRLEN + PPP_FCSLEN) */
-#define PPP_MAXMTU                      1500 /* Largest MTU we allow */
-#endif
-#define PPP_MINMTU                      64
-#define PPP_MRU                         1500     /* default MRU = max length of info field */
-#define PPP_MAXMRU                      1500     /* Largest MRU we allow */
-#ifndef PPP_DEFMRU
-#define PPP_DEFMRU                      296             /* Try for this */
-#endif
-#define PPP_MINMRU                      128             /* No MRUs below this */
-
-
-#define MAXNAMELEN                      256     /* max length of hostname or name for auth */
-#define MAXSECRETLEN                    256     /* max length of password or secret */
-
-#endif /* PPP_SUPPORT */
 
 /*
    --------------------------------------
@@ -1502,13 +1219,6 @@
  */
 #ifndef ICMP_DEBUG
 #define ICMP_DEBUG                      LWIP_DBG_OFF
-#endif
-
-/**
- * IGMP_DEBUG: Enable debugging in igmp.c.
- */
-#ifndef IGMP_DEBUG
-#define IGMP_DEBUG                      LWIP_DBG_OFF
 #endif
 
 /**
@@ -1636,55 +1346,6 @@
  */
 #ifndef TCPIP_DEBUG
 #define TCPIP_DEBUG                     LWIP_DBG_OFF
-#endif
-
-/**
- * PPP_DEBUG: Enable debugging for PPP.
- */
-#ifndef PPP_DEBUG
-#define PPP_DEBUG                       LWIP_DBG_OFF
-#endif
-
-/**
- * SLIP_DEBUG: Enable debugging in slipif.c.
- */
-#ifndef SLIP_DEBUG
-#define SLIP_DEBUG                      LWIP_DBG_OFF
-#endif
-
-/**
- * DHCP_DEBUG: Enable debugging in dhcp.c.
- */
-#ifndef DHCP_DEBUG
-#define DHCP_DEBUG                      LWIP_DBG_OFF
-#endif
-
-/**
- * AUTOIP_DEBUG: Enable debugging in autoip.c.
- */
-#ifndef AUTOIP_DEBUG
-#define AUTOIP_DEBUG                    LWIP_DBG_OFF
-#endif
-
-/**
- * SNMP_MSG_DEBUG: Enable debugging for SNMP messages.
- */
-#ifndef SNMP_MSG_DEBUG
-#define SNMP_MSG_DEBUG                  LWIP_DBG_OFF
-#endif
-
-/**
- * SNMP_MIB_DEBUG: Enable debugging for SNMP MIBs.
- */
-#ifndef SNMP_MIB_DEBUG
-#define SNMP_MIB_DEBUG                  LWIP_DBG_OFF
-#endif
-
-/**
- * DNS_DEBUG: Enable debugging for DNS.
- */
-#ifndef DNS_DEBUG
-#define DNS_DEBUG                       LWIP_DBG_OFF
 #endif
 
 #endif /* __LWIP_OPT_H__ */

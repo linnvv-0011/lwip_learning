@@ -50,7 +50,6 @@
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-#include "lwip/dhcp.h"
 #include "lwip/stats.h"
 #include "arch/perf.h"
 
@@ -213,9 +212,6 @@ ip_input(struct pbuf *p, struct netif *inp)
   struct netif *netif;
   u16_t iphdr_hlen;
   u16_t iphdr_len;
-#if LWIP_DHCP
-  int check_ip_src=1;
-#endif /* LWIP_DHCP */
 
   IP_STATS_INC(ip.recv);
 
@@ -308,29 +304,6 @@ ip_input(struct pbuf *p, struct netif *inp)
     } while(netif != NULL);
   }
 
-#if LWIP_DHCP
-  /* Pass DHCP messages regardless of destination address. DHCP traffic is addressed
-   * using link layer addressing (such as Ethernet MAC) so we must not filter on IP.
-   * According to RFC 1542 section 3.1.1, referred by RFC 2131).
-   */
-  if (netif == NULL) {
-    /* remote port is DHCP server? */
-    if (IPH_PROTO(iphdr) == IP_PROTO_UDP) {
-      LWIP_DEBUGF(IP_DEBUG | LWIP_DBG_TRACE | 1, ("ip_input: UDP packet to DHCP client port %"U16_F"\n",
-        ntohs(((struct udp_hdr *)((u8_t *)iphdr + iphdr_hlen))->dest)));
-      if (ntohs(((struct udp_hdr *)((u8_t *)iphdr + iphdr_hlen))->dest) == DHCP_CLIENT_PORT) {
-        LWIP_DEBUGF(IP_DEBUG | LWIP_DBG_TRACE | 1, ("ip_input: DHCP packet accepted.\n"));
-        netif = inp;
-        check_ip_src = 0;
-      }
-    }
-  }
-#endif /* LWIP_DHCP */
-
-  /* broadcast or multicast packet source address? Compliant with RFC 1122: 3.2.1.3 */
-#if LWIP_DHCP
-  if (check_ip_src)
-#endif /* LWIP_DHCP */
   {  if ((ip_addr_isbroadcast(&(iphdr->src), inp)) ||
          (ip_addr_ismulticast(&(iphdr->src)))) {
       /* packet source is not valid */

@@ -159,14 +159,6 @@ err_t etharp_request(struct netif *netif, struct ip_addr *ipaddr);
 
 err_t ethernet_input(struct pbuf *p, struct netif *netif);
 
-#if LWIP_AUTOIP
-err_t etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
-                 const struct eth_addr *ethdst_addr,
-                 const struct eth_addr *hwsrc_addr, const struct ip_addr *ipsrc_addr,
-                 const struct eth_addr *hwdst_addr, const struct ip_addr *ipdst_addr,
-                 const u16_t opcode);
-#endif /* LWIP_AUTOIP */
-
 #define eth_addr_cmp(addr1, addr2) (memcmp((addr1)->addr, (addr2)->addr, ETHARP_HWADDR_LEN) == 0)
 
 extern const struct eth_addr ethbroadcast, ethzero;

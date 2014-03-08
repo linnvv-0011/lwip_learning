@@ -50,7 +50,6 @@
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/tcp.h"
-#include "lwip/autoip.h"
 #include "netif/etharp.h"
 
 /* Compile-time sanity checks for configuration errors.
@@ -67,9 +66,6 @@
 #endif
 #if (!LWIP_UDP && LWIP_UDPLITE)
   #error "If you want to use UDP Lite, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
-#if (!LWIP_UDP && LWIP_DHCP)
-  #error "If you want to use DHCP, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
 #if (LWIP_ARP && (ARP_TABLE_SIZE > 0x7f))
   #error "If you want to use ARP, ARP_TABLE_SIZE must fit in an s8_t, so, you have to reduce it in your lwipopts.h"
@@ -112,15 +108,6 @@
 #endif
 #if (!LWIP_NETCONN && LWIP_SOCKET)
   #error "If you want to use Socket API, you have to define LWIP_NETCONN=1 in your lwipopts.h"
-#endif
-#if (((!LWIP_DHCP) || (!LWIP_AUTOIP)) && LWIP_DHCP_AUTOIP_COOP)
-  #error "If you want to use DHCP/AUTOIP cooperation mode, you have to define LWIP_DHCP=1 and LWIP_AUTOIP=1 in your lwipopts.h"
-#endif
-#if (((!LWIP_DHCP) || (!LWIP_ARP)) && DHCP_DOES_ARP_CHECK)
-  #error "If you want to use DHCP ARP checking, you have to define LWIP_DHCP=1 and LWIP_ARP=1 in your lwipopts.h"
-#endif
-#if (!LWIP_ARP && LWIP_AUTOIP)
-  #error "If you want to use AUTOIP, you have to define LWIP_ARP=1 in your lwipopts.h"
 #endif
 #if (LWIP_TCP && ((LWIP_EVENT_API && LWIP_CALLBACK_API) || (!LWIP_EVENT_API && !LWIP_CALLBACK_API)))
   #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwipopts.h"
@@ -233,7 +220,4 @@ lwip_init(void)
 #if LWIP_TCP
   tcp_init();
 #endif /* LWIP_TCP */
-#if LWIP_AUTOIP
-  autoip_init();
-#endif /* LWIP_AUTOIP */
 }

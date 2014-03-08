@@ -50,8 +50,6 @@
 #include "lwip/inet.h"
 #include "lwip/ip.h"
 #include "lwip/stats.h"
-#include "lwip/dhcp.h"
-#include "lwip/autoip.h"
 #include "netif/etharp.h"
 
 #if PPPOE_SUPPORT
@@ -610,9 +608,6 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
   struct ip_addr sipaddr, dipaddr;
   u8_t i;
   u8_t for_us;
-#if LWIP_AUTOIP
-  const u8_t * ethdst_hwaddr;
-#endif /* LWIP_AUTOIP */
 
   LWIP_ERROR("netif != NULL", (netif != NULL), return;);
   
@@ -642,13 +637,6 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
     return;
   }
   ETHARP_STATS_INC(etharp.recv);
-
-#if LWIP_AUTOIP
-  /* We have to check if a host already has configured our random
-   * created link local address and continously check if there is
-   * a host with this IP-address so we can detect collisions */
-  autoip_arp_reply(netif, hdr);
-#endif /* LWIP_AUTOIP */
 
   /* Copy struct ip_addr2 to aligned ip_addr, to support compilers without
    * structure packing (not using structure copy which breaks strict-aliasing rules). */
@@ -698,20 +686,11 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
       LWIP_ASSERT("netif->hwaddr_len must be the same as ETHARP_HWADDR_LEN for etharp!",
                   (netif->hwaddr_len == ETHARP_HWADDR_LEN));
       i = ETHARP_HWADDR_LEN;
-#if LWIP_AUTOIP
-      /* If we are using Link-Local, ARP packets must be broadcast on the
-       * link layer. (See RFC3927 Section 2.5) */
-      ethdst_hwaddr = ((netif->autoip != NULL) && (netif->autoip->state != AUTOIP_STATE_OFF)) ? (u8_t*)(ethbroadcast.addr) : hdr->shwaddr.addr;
-#endif /* LWIP_AUTOIP */
 
       while(i > 0) {
         i--;
         hdr->dhwaddr.addr[i] = hdr->shwaddr.addr[i];
-#if LWIP_AUTOIP
-        hdr->ethhdr.dest.addr[i] = ethdst_hwaddr[i];
-#else  /* LWIP_AUTOIP */
         hdr->ethhdr.dest.addr[i] = hdr->shwaddr.addr[i];
-#endif /* LWIP_AUTOIP */
         hdr->shwaddr.addr[i] = ethaddr->addr[i];
         hdr->ethhdr.src.addr[i] = ethaddr->addr[i];
       }
@@ -734,13 +713,6 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
   case ARP_REPLY:
     /* ARP reply. We already updated the ARP cache earlier. */
     LWIP_DEBUGF(ETHARP_DEBUG | LWIP_DBG_TRACE, ("etharp_arp_input: incoming ARP reply\n"));
-#if (LWIP_DHCP && DHCP_DOES_ARP_CHECK)
-    /* DHCP wants to know about ARP replies from any host with an
-     * IP address also offered to us by the DHCP server. We do not
-     * want to take a duplicate IP address on a single network.
-     * @todo How should we handle redundant (fail-over) interfaces? */
-    dhcp_arp_reply(netif, &sipaddr);
-#endif
     break;
   default:
     LWIP_DEBUGF(ETHARP_DEBUG | LWIP_DBG_TRACE, ("etharp_arp_input: ARP unknown opcode type %"S16_F"\n", htons(hdr->opcode)));
@@ -1010,10 +982,7 @@ etharp_query(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q)
  *         ERR_MEM if the ARP packet couldn't be allocated
  *         any other err_t on failure
  */
-#if !LWIP_AUTOIP
-static
-#endif /* LWIP_AUTOIP */
-err_t
+static err_t
 etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
            const struct eth_addr *ethdst_addr,
            const struct eth_addr *hwsrc_addr, const struct ip_addr *ipsrc_addr,
@@ -1024,9 +993,6 @@ etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
   err_t result = ERR_OK;
   u8_t k; /* ARP entry index */
   struct etharp_hdr *hdr;
-#if LWIP_AUTOIP
-  const u8_t * ethdst_hwaddr;
-#endif /* LWIP_AUTOIP */
 
   /* allocate a pbuf for the outgoing ARP request packet */
   p = pbuf_alloc(PBUF_RAW, sizeof(struct etharp_hdr), PBUF_RAM);
@@ -1046,11 +1012,6 @@ etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
   LWIP_ASSERT("netif->hwaddr_len must be the same as ETHARP_HWADDR_LEN for etharp!",
               (netif->hwaddr_len == ETHARP_HWADDR_LEN));
   k = ETHARP_HWADDR_LEN;
-#if LWIP_AUTOIP
-  /* If we are using Link-Local, ARP packets must be broadcast on the
-   * link layer. (See RFC3927 Section 2.5) */
-  ethdst_hwaddr = ((netif->autoip != NULL) && (netif->autoip->state != AUTOIP_STATE_OFF)) ? (u8_t*)(ethbroadcast.addr) : ethdst_addr->addr;
-#endif /* LWIP_AUTOIP */
   /* Write MAC-Addresses (combined loop for both headers) */
   while(k > 0) {
     k--;
@@ -1058,11 +1019,7 @@ etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
     hdr->shwaddr.addr[k] = hwsrc_addr->addr[k];
     hdr->dhwaddr.addr[k] = hwdst_addr->addr[k];
     /* Write the Ethernet MAC-Addresses */
-#if LWIP_AUTOIP
-    hdr->ethhdr.dest.addr[k] = ethdst_hwaddr[k];
-#else  /* LWIP_AUTOIP */
     hdr->ethhdr.dest.addr[k] = ethdst_addr->addr[k];
-#endif /* LWIP_AUTOIP */
     hdr->ethhdr.src.addr[k]  = ethsrc_addr->addr[k];
   }
   hdr->sipaddr = *(struct ip_addr2 *)ipsrc_addr;

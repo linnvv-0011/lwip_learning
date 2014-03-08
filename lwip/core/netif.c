@@ -93,14 +93,6 @@ netif_add(struct netif *netif, struct ip_addr *ipaddr, struct ip_addr *netmask,
   netif->netmask.addr = 0;
   netif->gw.addr = 0;
   netif->flags = 0;
-#if LWIP_DHCP
-  /* netif not under DHCP control by default */
-  netif->dhcp = NULL;
-#endif /* LWIP_DHCP */
-#if LWIP_AUTOIP
-  /* netif not under AutoIP control by default */
-  netif->autoip = NULL;
-#endif /* LWIP_AUTOIP */
 #if LWIP_NETIF_STATUS_CALLBACK
   netif->status_callback = NULL;
 #endif /* LWIP_NETIF_STATUS_CALLBACK */
@@ -347,7 +339,6 @@ netif_set_default(struct netif *netif)
  * @note: Enabling DHCP on a down interface will make it come
  * up once configured.
  * 
- * @see dhcp_start()
  */ 
 void netif_set_up(struct netif *netif)
 {
@@ -373,7 +364,6 @@ void netif_set_up(struct netif *netif)
  * @note: Enabling DHCP on a down interface will make it come
  * up once configured.
  * 
- * @see dhcp_start()
  */ 
 void netif_set_down(struct netif *netif)
 {
